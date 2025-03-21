@@ -1,0 +1,59 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Health Monitoring App',
+      home: HealthMonitorScreen(),
+    );
+  }
+}
+
+class HealthMonitorScreen extends StatefulWidget {
+  @override
+  _HealthMonitorScreenState createState() => _HealthMonitorScreenState();
+}
+
+class _HealthMonitorScreenState extends State<HealthMonitorScreen> {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Health Monitor")),
+      body: StreamBuilder(
+        stream: firestore.collection('health_data').snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          var healthData = snapshot.data.docs[0];
+          double heartRate = healthData['heart_rate'];
+          double bodyTemp = healthData['body_temp'];
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Heart Rate: $heartRate bpm", style: TextStyle(fontSize: 20)),
+                SizedBox(height: 10),
+                Text("Body Temperature: $bodyTemp °C", style: TextStyle(fontSize: 20)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
